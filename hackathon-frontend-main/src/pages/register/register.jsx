@@ -4,12 +4,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { BASE_URL } from "../../constents";
 import { useDispatch, useSelector } from "react-redux";
+import {createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../config/firebase-config";
 
 const Register = () => {
     const [name,setName]=useState('')
     const [email,setEmail]=useState('')
-    const [password,setPassword]=useState('')
-    const [ConfirmPassword, setConfirmPassword] = useState("");
+    const [password,setPassword]=useState('');
     const [nameError, setNameError] = useState("");
     const [EmailError, setEmailError] = useState("");
     const [PasswordError, setPasswordError] = useState("");
@@ -17,11 +18,17 @@ const Register = () => {
     const { user } = useSelector((state) => state.user);
     const dispatch = useDispatch();
     const navigate=useNavigate()
-    useEffect(()=>{
-      if (user){
-        navigate('/')
+
+    const SignUp = async () =>{
+      try{
+        await createUserWithEmailAndPassword(auth, email, password);
+        
+      } catch (err){
+        console.error(err);
       }
-    },[])
+      navigate("/login");
+    }
+
     const validateName = useCallback(
         (value) => {
         const regex = /^[a-zA-Z0-9_]{3,20}$/;
@@ -51,48 +58,14 @@ const Register = () => {
           regex.test(value) ? "" : "Password must be at least 8 characters"
         );
       });
-      const handlePassword = (e) => {
-        const value = e.target.value;
-        setPassword(value);
-        validatePassword(value);
-      };
     
       const validateConfirmPassword = (value) => {
         setConfirmPasswordError(value === password ? "" : "Passwords do not match");
       };
-      const handleConfirmPassword = (e) => {
-        const value = e.target.value;
-        setConfirmPassword(value);
-        validateConfirmPassword(value);
-      };
     
  
     
-      const handleRegistration = (e) => {
-        e.preventDefault();
-        const data = {
-          username: name,
-          email: email,
-          password: password,
-        };
-        validateConfirmPassword(ConfirmPassword); // Validate confirm password before checking error
       
-        if (!EmailError && !nameError && !PasswordError && !ConfirmPasswordError) {
-          axios
-            .post(BASE_URL + "register", data)
-            .then((response) => {
-              if (response.status === 400) {
-                toast.error("Give Proper Credentials");
-              } else {
-                toast.success("User Registered Successfully");
-                navigate("/otp");
-              }
-            })
-            .catch((error) => toast.error(error));
-        } else {
-          toast.error("Give Proper Credentials");
-        }
-      };
 
     return (
         <>
@@ -128,8 +101,8 @@ const Register = () => {
                                     Your Email
                                 </h6>
                                 <div className="relative h-11 w-full min-w-[200px]">
-                                    <input value={email} onChange={(e)=>handleEmail(e)}
-                                        placeholder="Entere your mail address"
+                                    <input onChange={(e)=>setEmail(e.target.value)}
+                                        placeholder="Enter your mail address"
                                         className="peer h-full w-full rounded-md border border-black border-opacity-20 focus:border-black focus:border-opacity-100 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
                                     />
                                     <div className="error h-[30px] text-xs  text-red-600">
@@ -140,7 +113,7 @@ const Register = () => {
                                     Password
                                 </h6>
                                 <div className="relative h-11 w-full min-w-[200px]">
-                                    <input value={password} onChange={(e)=>handlePassword(e)}
+                                    <input onChange={(e)=>setPassword(e.target.value)}
                                         type="password"
                                         placeholder="********"
                                         className="peer h-full w-full rounded-md border border-black border-opacity-20 focus:border-black focus:border-opacity-100 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
@@ -149,31 +122,18 @@ const Register = () => {
                                         {PasswordError ? PasswordError : ''}
                                     </div>
                                 </div>
-                                <h6 className="block -mb-3 font-sans text-sm antialiased font-semibold leading-relaxed tracking-normal text-blue-gray-900">
-                                    Confirm Password
-                                </h6>
-                                <div className="relative h-11 w-full min-w-[200px]">
-                                    <input value={ConfirmPassword} onChange={(e)=>handleConfirmPassword(e)}
-                                        type="password"
-                                        placeholder="********"
-                                        className="peer h-full w-full rounded-md border border-black border-opacity-20 focus:border-black focus:border-opacity-100 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
-                                    />
-                                    <div className="error h-[30px] text-xs  text-red-600">
-                                        {ConfirmPasswordError ? ConfirmPasswordError : ''}
-                                    </div>
-                                </div>
                             </div>
 
-                            <button onClick={(e)=>handleRegistration(e)}
+                            <button onClick={SignUp}
                                 className="mt-6 block w-full select-none rounded-lg bg-gray-900 py-3 px-6 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-gray-900/10 transition-all hover:shadow-lg hover:shadow-gray-900/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                                 type="button"
                             >
-                                Sign in
+                                Register
                             </button>
                             <p className="block mt-4 font-sans text-sm antialiased font-normal leading-relaxed text-center text-gray-700">
-                                Don't have an account?
+                                Already have an account?
                                 <Link to='/login' className="font-medium text-gray-900">
-                                    Sign Up
+                                    Sign In
                                 </Link>
                                 </p>
                         </form>

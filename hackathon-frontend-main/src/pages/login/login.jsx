@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { BASE_URL } from "../../constents";
 import { useDispatch, useSelector } from "react-redux";
 import { updateUserDetails } from "../../features/userSlice";
+import {createUserWithEmailAndPassword} from "firebase/auth"
 
 const LoginForm = () => {
     const [email, setEmail] = useState("");

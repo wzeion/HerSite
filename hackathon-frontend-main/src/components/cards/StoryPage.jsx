@@ -5,15 +5,18 @@ import { IoClose } from "react-icons/io5";
 import { BASE_URL, local } from "../../constents";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {db} from "../../config/firebase-config"
+import { collection,addDoc } from "firebase/firestore";
 
 const StoryPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
   const [stories, setStories] = useState([]);
   const [count, setCount] = useState(3);
+  const StoryCollectionRef = collection(db, "Stories");
+
   useEffect(() => {
     axios
       .get(BASE_URL + "stories")
@@ -44,45 +47,15 @@ const StoryPage = () => {
     setIsModalOpen(false);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-  
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageViewer = document.querySelector(".image-viewer");
-        if (imageViewer) {
-          imageViewer.style.backgroundImage = `url(${e.target.result})`; // Corrected
-          imageViewer.style.display = "block";
-        }
-      };
-      reader.readAsDataURL(file);
+  const onShareStory = async() =>{
+    try{
+      await addDoc(StoryCollectionRef,{ Name: name, Title: title, Description: description});
+    } catch(err) {
+      console.error(err);
     }
+    
   };
   
-  const handleShare = () => {
-    const formData = new FormData();
-    formData.append("image", image);
-    formData.append("name", name);
-    formData.append("title", title);
-    formData.append("description", description);
-    axios
-      .post(BASE_URL + "add-story", formData)
-      .then((response) => {
-        console.log(response.data);
-        console.log("Request successful:", response.data);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-
-    setName("");
-    setTitle("");
-    setDescription("");
-    setImage(null);
-    closeModal();
-  };
 
   return (
     <>
@@ -259,25 +232,10 @@ const StoryPage = () => {
                 />
               </div>
 
-              <h6 className="block text-sm -mb-2 font-sans antialiased font-semibold leading-relaxed tracking-normal text-blue-gray-900">
-                Upload Image
-              </h6>
-              <div className="relative w-full min-w-[200px]">
-                <input
-                  type="file"
-                  onChange={handleImageChange}
-                  className="file:bg-gradient-to-b mb-3  file:from-gray-400 file:to-gray-400 file:p-2 file:text-white  file:border-none file:rounded-xl  peer h-full w-full rounded-md border border-black border-opacity-20 focus:border-black focus:border-opacity-100 bg-transparent px-2 py-2 font-sans text-xs font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
-                />
-              </div>
-              {image ? (
-                <div className="image-viewer h-[130px] w-[200px] mx-auto bg-cover bg-center"></div>
-              ) : (
-                ""
-              )}
             </div>
 
             <button
-              onClick={handleShare}
+              onClick={onShareStory}
               className="mt-6 block w-full  select-none rounded-lg bg-[#DED0B6] py-3 px-6 text-center align-middle font-sans text-xs font-semibold uppercase text-black shadow-md shadow-gray-900/10 transition-all hover:shadow-lg hover:shadow-gray-900/20 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
               type="button"
             >
